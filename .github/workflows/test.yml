@@ -1,0 +1,35 @@
+name: Reproduce fontique fallback_families bug
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  reproduce-bug:
+    name: "Stock parley 0.7.0 (demonstrates bug)"
+    runs-on: ubuntu-latest
+    continue-on-error: true # Expected to fail — this IS the bug
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run tests (expect bold/italic second-word failures)
+        run: cargo test -- --nocapture
+
+  verify-fix:
+    name: "Patched fontique (fix applied)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Patch Cargo.toml to use fixed fontique
+        run: |
+          cat >> Cargo.toml << 'EOF'
+
+          [patch.crates-io]
+          fontique = { git = "https://github.com/dqii/parley", branch = "fix/fontique-fallback-cache" }
+          EOF
+      - name: Run tests (all should pass with fix)
+        run: cargo test -- --nocapture

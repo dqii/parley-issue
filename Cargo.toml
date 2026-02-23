@@ -1,0 +1,8 @@
+[package]
+name = "parley-issue"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+parley = "0.7.0"
+peniko = "0.4.1"
