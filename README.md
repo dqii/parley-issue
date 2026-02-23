@@ -38,19 +38,19 @@ cargo test
 
 ## The Fix
 
-A 3-line change in `fontique/src/fallback.rs` — clear the cached families when attrs differ:
+A 3-line addition in `fontique/src/collection/query.rs` — when attributes change, also clear the cached fonts on `fallback_families` (not just `families`):
 
 ```diff
---- a/fontique/src/fallback.rs
-+++ b/fontique/src/fallback.rs
-@@ fn fallback_families(...)
-     pub(crate) fn fallback_families(..., attrs: Attrs) -> &[FamilyId] {
--        if !self.families.is_empty() {
-+        if !self.families.is_empty() && self.attrs == attrs {
-             return &self.families;
-         }
-+        self.families.clear();
-+        self.attrs = attrs;
+--- a/fontique/src/collection/query.rs
++++ b/fontique/src/collection/query.rs
+@@ impl<'a> Query<'a>
+             for family in &mut self.state.families {
+                 family.clear_fonts();
+             }
++            for family in &mut self.state.fallback_families {
++                family.clear_fonts();
++            }
+             self.attributes = attributes;
 ```
 
 **Fix branch**: [`dqii/parley#fix/fontique-fallback-cache`](https://github.com/dqii/parley/tree/fix/fontique-fallback-cache)
